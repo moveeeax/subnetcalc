@@ -12,6 +12,8 @@ __all__ = [
     "parse_address",
     "network_info",
     "split_network",
+    "contains",
+    "overlaps",
 ]
 
 
@@ -113,3 +115,27 @@ def split_network(cidr, new_prefix=None, count=None, strict=False):
         )
 
     return list(net.subnets(new_prefix=new_prefix))
+
+
+def contains(cidr, addr, strict=False):
+    """Return True if ``addr`` (address or network) lies within ``cidr``."""
+    net = parse_network(cidr, strict=strict)
+    try:
+        other = parse_address(addr)
+    except ValueError:
+        other = parse_network(addr, strict=False)
+        if other.version != net.version:
+            return False
+        return other.subnet_of(net)
+    if other.version != net.version:
+        return False
+    return other in net
+
+
+def overlaps(cidr_a, cidr_b, strict=False):
+    """Return True if the two networks share any address."""
+    a = parse_network(cidr_a, strict=strict)
+    b = parse_network(cidr_b, strict=strict)
+    if a.version != b.version:
+        return False
+    return a.overlaps(b)
