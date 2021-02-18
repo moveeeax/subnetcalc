@@ -11,6 +11,7 @@ __all__ = [
     "parse_network",
     "parse_address",
     "network_info",
+    "split_network",
 ]
 
 
@@ -80,3 +81,35 @@ def _usable_count(net):
     if net.prefixlen == 128:
         return 1
     return total
+
+
+def split_network(cidr, new_prefix=None, count=None, strict=False):
+    """Subdivide ``cidr``.
+
+    Provide exactly one of ``new_prefix`` (target prefix length) or ``count``
+    (number of equal subnets, which must be a power of two).  Returns a list
+    of network objects.
+    """
+    net = parse_network(cidr, strict=strict)
+    if (new_prefix is None) == (count is None):
+        raise ValueError("provide exactly one of new_prefix or count")
+
+    if count is not None:
+        if count < 1:
+            raise ValueError("count must be >= 1")
+        if count & (count - 1) != 0:
+            raise ValueError("count must be a power of two")
+        bits = count.bit_length() - 1
+        new_prefix = net.prefixlen + bits
+
+    if new_prefix < net.prefixlen:
+        raise ValueError(
+            "new prefix %d is shorter than network prefix %d"
+            % (new_prefix, net.prefixlen)
+        )
+    if new_prefix > net.max_prefixlen:
+        raise ValueError(
+            "new prefix %d exceeds max %d" % (new_prefix, net.max_prefixlen)
+        )
+
+    return list(net.subnets(new_prefix=new_prefix))
