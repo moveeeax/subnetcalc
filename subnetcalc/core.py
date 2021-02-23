@@ -14,6 +14,8 @@ __all__ = [
     "split_network",
     "contains",
     "overlaps",
+    "summarize",
+    "range_to_cidrs",
 ]
 
 
@@ -139,3 +141,44 @@ def overlaps(cidr_a, cidr_b, strict=False):
     if a.version != b.version:
         return False
     return a.overlaps(b)
+
+
+def summarize(items, strict=False):
+    """Collapse ``items`` (addresses and/or networks) into a minimal set.
+
+    Returns a list of network objects.  IPv4 and IPv6 inputs may be mixed;
+    ``ipaddress.collapse_addresses`` is applied per family and the results
+    are concatenated (IPv4 first).
+    """
+    v4 = []
+    v6 = []
+    for item in items:
+        net = _coerce_network(item, strict=strict)
+        (v4 if net.version == 4 else v6).append(net)
+    result = []
+    if v4:
+        result.extend(ipaddress.collapse_addresses(v4))
+    if v6:
+        result.extend(ipaddress.collapse_addresses(v6))
+    return result
+
+
+def _coerce_network(item, strict=False):
+    """Turn an address or CIDR string into a network object."""
+    try:
+        return parse_network(item, strict=strict)
+    except ValueError:
+        addr = parse_address(item)
+        suffix = "/32" if addr.version == 4 else "/128"
+        return ipaddress.ip_network(str(addr) + suffix)
+
+
+def range_to_cidrs(start, end):
+    """Smallest CIDR set covering the inclusive range ``start``..``end``."""
+    first = parse_address(start)
+    last = parse_address(end)
+    if first.version != last.version:
+        raise ValueError("start and end must be the same IP version")
+    if int(first) > int(last):
+        raise ValueError("start address is greater than end address")
+    return list(ipaddress.summarize_address_range(first, last))
