@@ -41,6 +41,26 @@ def cmd_info(args):
     return 0
 
 
+def cmd_split(args):
+    subnets = core.split_network(
+        args.cidr,
+        new_prefix=args.prefix,
+        count=args.count,
+        strict=args.strict,
+    )
+    strs = [str(s) for s in subnets]
+    payload = {"cidr": args.cidr, "count": len(strs), "subnets": strs}
+    _print_result(payload, strs, args.json)
+    return 0
+
+
+def cmd_contains(args):
+    result = core.contains(args.cidr, args.addr, strict=args.strict)
+    payload = {"cidr": args.cidr, "addr": args.addr, "contains": result}
+    _print_result(payload, ["true" if result else "false"], args.json)
+    return 0 if result else 1
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="subnetcalc",
@@ -61,6 +81,26 @@ def build_parser():
         "--strict", action="store_true", help="reject host bits in the network"
     )
     p_info.set_defaults(func=cmd_info)
+
+    p_split = sub.add_parser("split", help="subdivide a CIDR block")
+    p_split.add_argument("cidr", help="network to subdivide")
+    group = p_split.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--prefix", type=int, metavar="N", help="target prefix length"
+    )
+    group.add_argument(
+        "--count", type=int, metavar="K", help="number of equal subnets (power of two)"
+    )
+    p_split.add_argument("--strict", action="store_true", help="reject host bits")
+    p_split.set_defaults(func=cmd_split)
+
+    p_contains = sub.add_parser(
+        "contains", help="test whether an address/network is inside a CIDR"
+    )
+    p_contains.add_argument("cidr", help="containing network")
+    p_contains.add_argument("addr", help="address or network to test")
+    p_contains.add_argument("--strict", action="store_true", help="reject host bits")
+    p_contains.set_defaults(func=cmd_contains)
 
     return parser
 
