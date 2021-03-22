@@ -61,6 +61,29 @@ def cmd_contains(args):
     return 0 if result else 1
 
 
+def cmd_overlaps(args):
+    result = core.overlaps(args.cidr_a, args.cidr_b, strict=args.strict)
+    payload = {"a": args.cidr_a, "b": args.cidr_b, "overlaps": result}
+    _print_result(payload, ["true" if result else "false"], args.json)
+    return 0 if result else 1
+
+
+def cmd_summarize(args):
+    nets = core.summarize(args.items, strict=args.strict)
+    strs = [str(n) for n in nets]
+    payload = {"input": list(args.items), "summary": strs}
+    _print_result(payload, strs, args.json)
+    return 0
+
+
+def cmd_range(args):
+    nets = core.range_to_cidrs(args.start, args.end)
+    strs = [str(n) for n in nets]
+    payload = {"start": args.start, "end": args.end, "cidrs": strs}
+    _print_result(payload, strs, args.json)
+    return 0
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="subnetcalc",
@@ -101,6 +124,26 @@ def build_parser():
     p_contains.add_argument("addr", help="address or network to test")
     p_contains.add_argument("--strict", action="store_true", help="reject host bits")
     p_contains.set_defaults(func=cmd_contains)
+
+    p_overlaps = sub.add_parser("overlaps", help="test whether two CIDRs overlap")
+    p_overlaps.add_argument("cidr_a", metavar="CIDR_A", help="first network")
+    p_overlaps.add_argument("cidr_b", metavar="CIDR_B", help="second network")
+    p_overlaps.add_argument("--strict", action="store_true", help="reject host bits")
+    p_overlaps.set_defaults(func=cmd_overlaps)
+
+    p_sum = sub.add_parser(
+        "summarize", help="collapse addresses/networks into a minimal CIDR set"
+    )
+    p_sum.add_argument("items", nargs="+", metavar="ADDR", help="addresses or networks")
+    p_sum.add_argument("--strict", action="store_true", help="reject host bits")
+    p_sum.set_defaults(func=cmd_summarize)
+
+    p_range = sub.add_parser(
+        "range", help="smallest CIDR set covering an inclusive address range"
+    )
+    p_range.add_argument("start", help="first address (inclusive)")
+    p_range.add_argument("end", help="last address (inclusive)")
+    p_range.set_defaults(func=cmd_range)
 
     return parser
 
