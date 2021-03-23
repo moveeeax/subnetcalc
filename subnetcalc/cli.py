@@ -93,19 +93,30 @@ def build_parser():
         "--version", action="version", version="%(prog)s " + __version__
     )
     parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="global_json",
+        help="emit machine-readable JSON",
+    )
+
+    # Shared options usable either before or after the subcommand name.
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument(
         "--json", action="store_true", help="emit machine-readable JSON"
     )
 
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    p_info = sub.add_parser("info", help="show details about a CIDR block")
+    p_info = sub.add_parser(
+        "info", parents=[common], help="show details about a CIDR block"
+    )
     p_info.add_argument("cidr", help="network in CIDR notation, e.g. 10.0.0.0/24")
     p_info.add_argument(
         "--strict", action="store_true", help="reject host bits in the network"
     )
     p_info.set_defaults(func=cmd_info)
 
-    p_split = sub.add_parser("split", help="subdivide a CIDR block")
+    p_split = sub.add_parser("split", parents=[common], help="subdivide a CIDR block")
     p_split.add_argument("cidr", help="network to subdivide")
     group = p_split.add_mutually_exclusive_group(required=True)
     group.add_argument(
@@ -118,28 +129,36 @@ def build_parser():
     p_split.set_defaults(func=cmd_split)
 
     p_contains = sub.add_parser(
-        "contains", help="test whether an address/network is inside a CIDR"
+        "contains",
+        parents=[common],
+        help="test whether an address/network is inside a CIDR",
     )
     p_contains.add_argument("cidr", help="containing network")
     p_contains.add_argument("addr", help="address or network to test")
     p_contains.add_argument("--strict", action="store_true", help="reject host bits")
     p_contains.set_defaults(func=cmd_contains)
 
-    p_overlaps = sub.add_parser("overlaps", help="test whether two CIDRs overlap")
+    p_overlaps = sub.add_parser(
+        "overlaps", parents=[common], help="test whether two CIDRs overlap"
+    )
     p_overlaps.add_argument("cidr_a", metavar="CIDR_A", help="first network")
     p_overlaps.add_argument("cidr_b", metavar="CIDR_B", help="second network")
     p_overlaps.add_argument("--strict", action="store_true", help="reject host bits")
     p_overlaps.set_defaults(func=cmd_overlaps)
 
     p_sum = sub.add_parser(
-        "summarize", help="collapse addresses/networks into a minimal CIDR set"
+        "summarize",
+        parents=[common],
+        help="collapse addresses/networks into a minimal CIDR set",
     )
     p_sum.add_argument("items", nargs="+", metavar="ADDR", help="addresses or networks")
     p_sum.add_argument("--strict", action="store_true", help="reject host bits")
     p_sum.set_defaults(func=cmd_summarize)
 
     p_range = sub.add_parser(
-        "range", help="smallest CIDR set covering an inclusive address range"
+        "range",
+        parents=[common],
+        help="smallest CIDR set covering an inclusive address range",
     )
     p_range.add_argument("start", help="first address (inclusive)")
     p_range.add_argument("end", help="last address (inclusive)")
@@ -154,6 +173,8 @@ def main(argv=None):
     if not getattr(args, "command", None):
         parser.print_help()
         return 2
+    # A global "--json" (before the subcommand) folds into the per-command flag.
+    args.json = getattr(args, "json", False) or getattr(args, "global_json", False)
     try:
         return args.func(args)
     except ValueError as exc:
