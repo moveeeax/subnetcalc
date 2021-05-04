@@ -83,6 +83,21 @@ def test_info_invalid_raises():
         core.network_info("not-a-network")
 
 
+def test_info_loopback_flag():
+    info = core.network_info("127.0.0.1/32")
+    assert info["is_loopback"] is True
+
+
+def test_info_link_local_flag():
+    info = core.network_info("169.254.0.0/16")
+    assert info["is_link_local"] is True
+
+
+def test_info_multicast_flag():
+    info = core.network_info("224.0.0.0/4")
+    assert info["is_multicast"] is True
+
+
 def test_parse_address_roundtrip():
     addr = core.parse_address("10.1.2.3")
     assert isinstance(addr, ipaddress.IPv4Address)

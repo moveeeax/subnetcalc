@@ -36,6 +36,10 @@ def cmd_info(args):
         "Usable hosts: %d" % info["num_usable"],
         "Private:      %s" % info["is_private"],
         "Global:       %s" % info["is_global"],
+        "Multicast:    %s" % info["is_multicast"],
+        "Reserved:     %s" % info["is_reserved"],
+        "Loopback:     %s" % info["is_loopback"],
+        "Link-local:   %s" % info["is_link_local"],
     ]
     _print_result(info, lines, args.json)
     return 0

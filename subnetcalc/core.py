@@ -69,6 +69,8 @@ def network_info(cidr, strict=False):
         "is_global": net.is_global,
         "is_multicast": net.is_multicast,
         "is_reserved": net.is_reserved,
+        "is_loopback": net.is_loopback,
+        "is_link_local": net.is_link_local,
     }
 
 
