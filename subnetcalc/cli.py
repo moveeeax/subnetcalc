@@ -23,11 +23,13 @@ def _print_result(payload, lines, as_json):
 
 def cmd_info(args):
     info = core.network_info(args.cidr, strict=args.strict)
+    # IPv6 has no broadcast address; label the final address accordingly.
+    last_label = "Broadcast:   " if info["version"] == 4 else "Last addr:   "
     lines = [
         "CIDR:         %s" % info["cidr"],
         "Version:      IPv%d" % info["version"],
         "Network:      %s" % info["network_address"],
-        "Broadcast:    %s" % info["broadcast_address"],
+        "%s %s" % (last_label, info["broadcast_address"]),
         "Netmask:      %s" % info["netmask"],
         "Wildcard:     %s" % info["hostmask"],
         "Prefix:       /%d" % info["prefixlen"],
