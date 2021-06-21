@@ -94,6 +94,15 @@ def build_parser():
     parser = argparse.ArgumentParser(
         prog="subnetcalc",
         description="CIDR / subnet toolkit for network admins.",
+        epilog=(
+            "examples:\n"
+            "  subnetcalc info 192.168.1.0/24\n"
+            "  subnetcalc split 10.0.0.0/24 --count 4\n"
+            "  subnetcalc contains 10.0.0.0/8 10.1.2.3\n"
+            "  subnetcalc summarize 10.0.0.0/25 10.0.0.128/25\n"
+            "  subnetcalc range 192.168.0.1 192.168.0.10 --json\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--version", action="version", version="%(prog)s " + __version__
