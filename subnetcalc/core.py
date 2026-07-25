@@ -37,8 +37,9 @@ def network_info(cidr, strict=False):
     """Return a dict describing ``cidr``.
 
     Works for both IPv4 and IPv6.  ``num_addresses`` counts every address in
-    the block, while ``num_usable`` applies the classic "minus network and
-    broadcast" rule for IPv4 (with the /31 and /32 special cases).
+    the block, while ``num_usable`` counts only the assignable ones and always
+    matches the ``first_host``..``last_host`` range -- see :func:`_usable_count`
+    for the per-family rules and their point-to-point exceptions.
     """
     net = parse_network(cidr, strict=strict)
 
@@ -75,18 +76,26 @@ def network_info(cidr, strict=False):
 
 
 def _usable_count(net):
-    """Number of assignable host addresses in ``net``."""
+    """Number of assignable host addresses in ``net``.
+
+    Mirrors ``ipaddress``' own ``hosts()`` semantics, so the count always
+    agrees with the ``first_host``..``last_host`` range reported next to it.
+    """
     total = net.num_addresses
-    if net.version == 4:
-        if net.prefixlen == 32:
-            return 1
-        if net.prefixlen == 31:
-            # RFC 3021 point-to-point: both addresses are usable.
-            return 2
-        return max(total - 2, 0)
-    if net.prefixlen == 128:
+    if net.prefixlen == net.max_prefixlen:
+        # A single address (/32 or /128): the address itself.
         return 1
-    return total
+    if net.prefixlen == net.max_prefixlen - 1:
+        # Point-to-point links: IPv4 /31 (RFC 3021) and IPv6 /127 (RFC 6164)
+        # have no network or broadcast address, so both addresses are usable.
+        return 2
+    if net.version == 4:
+        # The network and broadcast addresses are not assignable to hosts.
+        return total - 2
+    # IPv6 has no broadcast address, but the all-zeros interface identifier is
+    # reserved as the Subnet-Router anycast address (RFC 4291 s2.6.1), which is
+    # why ``IPv6Network.hosts()`` -- and ``first_host`` above -- skip it.
+    return total - 1
 
 
 def split_network(cidr, new_prefix=None, count=None, strict=False):
@@ -127,7 +136,9 @@ def contains(cidr, addr, strict=False):
     try:
         other = parse_address(addr)
     except ValueError:
-        other = parse_network(addr, strict=False)
+        # ``strict`` has to be honoured here too, otherwise host bits are
+        # rejected in ``cidr`` but silently accepted in ``addr``.
+        other = parse_network(addr, strict=strict)
         if other.version != net.version:
             return False
         return other.subnet_of(net)
@@ -167,12 +178,15 @@ def summarize(items, strict=False):
 
 def _coerce_network(item, strict=False):
     """Turn an address or CIDR string into a network object."""
-    try:
-        return parse_network(item, strict=strict)
-    except ValueError:
-        addr = parse_address(item)
-        suffix = "/32" if addr.version == 4 else "/128"
-        return ipaddress.ip_network(str(addr) + suffix)
+    text = str(item)
+    if "/" in text:
+        # An explicit prefix means the caller meant a network: parse it as one
+        # so ``strict`` applies and a host-bits error is reported as such
+        # instead of being masked by a misleading "not an address" failure.
+        return parse_network(text, strict=strict)
+    addr = parse_address(text)
+    suffix = "/32" if addr.version == 4 else "/128"
+    return ipaddress.ip_network(str(addr) + suffix)
 
 
 def range_to_cidrs(start, end):

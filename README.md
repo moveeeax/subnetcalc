@@ -12,11 +12,12 @@ $ . venv/bin/activate
 $ pip install -e .
 ```
 
-Requires Python 3.6+. For development (tests):
+Requires Python 3.7+. For development (tests and lint):
 
 ```console
 $ pip install -e . -r requirements-dev.txt
 $ python -m pytest -q
+$ python -m flake8 .
 ```
 
 ## Usage
@@ -48,6 +49,22 @@ $ subnetcalc info 2001:db8::/64 --json
   ...
 }
 ```
+
+`Usable hosts` always counts exactly the addresses in the `Hosts` range shown
+above it, matching the standard library's `ipaddress.hosts()`:
+
+| Block | Usable hosts | Why |
+| --- | --- | --- |
+| IPv4 `/32` | 1 | the address itself |
+| IPv4 `/31` | 2 | point-to-point link, no network or broadcast address (RFC 3021) |
+| IPv4 other | `2^(32-n) - 2` | network and broadcast addresses are not assignable |
+| IPv6 `/128` | 1 | the address itself |
+| IPv6 `/127` | 2 | point-to-point link (RFC 6164) |
+| IPv6 other | `2^(128-n) - 1` | the all-zeros interface ID is the Subnet-Router anycast address (RFC 4291 §2.6.1) |
+
+By default host bits are masked off (`10.1.2.3/24` is read as `10.1.2.0/24`);
+pass `--strict` to reject them instead. `--strict` applies to every network
+argument of a command.
 
 ### split — subdivide a block
 

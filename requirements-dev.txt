@@ -1,1 +1,10 @@
-pytest==6.2.4
+# Development dependencies.
+#
+# Ranges rather than exact pins: this package has no runtime dependencies and
+# the tests use plain asserts, so a floating dev toolchain is safe and keeps
+# the suite runnable on current Python releases.
+#
+# pytest was previously pinned to 6.2.4, which cannot even collect these tests
+# on Python 3.12+ -- its assertion rewriter calls the removed ``ast.Str``.
+pytest>=7.4,<9
+flake8>=6.1,<8
