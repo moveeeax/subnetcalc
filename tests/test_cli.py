@@ -78,6 +78,12 @@ def test_split_bad_count_error(capsys):
     assert "power of two" in err
 
 
+def test_split_over_limit_error(capsys):
+    code, _, err = run(capsys, ["split", "10.0.0.0/8", "--prefix", "32"])
+    assert code == 2
+    assert "exceeds the limit" in err
+
+
 def test_contains_true_exit_zero(capsys):
     code, out, _ = run(capsys, ["contains", "10.0.0.0/24", "10.0.0.9"])
     assert code == 0

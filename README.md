@@ -41,6 +41,10 @@ Addresses:    256
 Usable hosts: 254
 Private:      True
 Global:       False
+Multicast:    False
+Reserved:     False
+Loopback:     False
+Link-local:   False
 
 $ subnetcalc info 2001:db8::/64 --json
 {
@@ -87,6 +91,10 @@ $ subnetcalc split 10.0.0.0/24 --count 4
 10.0.0.128/26
 10.0.0.192/26
 ```
+
+A split that would produce more than 1,000,000 subnets is rejected with an
+error instead of hanging or exhausting memory — e.g. `10.0.0.0/8 --prefix 32`
+(16,777,216 subnets) or any sufficiently large IPv6 split.
 
 ### contains — membership test
 

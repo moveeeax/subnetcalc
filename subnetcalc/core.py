@@ -18,6 +18,13 @@ __all__ = [
     "range_to_cidrs",
 ]
 
+# Upper bound on how many subnets a single split() call will materialize.
+# Without this, a request like ``split_network("10.0.0.0/8", new_prefix=32)``
+# builds a 16.7M-element list, and the IPv6 equivalent (e.g. ``::/0`` down to
+# ``/128``) tries to build up to 2**128 -- both hang the process and can
+# exhaust memory rather than failing fast with a useful error.
+MAX_SPLIT_SUBNETS = 1_000_000
+
 
 def parse_network(value, strict=False):
     """Return an IPv4Network/IPv6Network from ``value``.
@@ -125,6 +132,14 @@ def split_network(cidr, new_prefix=None, count=None, strict=False):
     if new_prefix > net.max_prefixlen:
         raise ValueError(
             "new prefix %d exceeds max %d" % (new_prefix, net.max_prefixlen)
+        )
+
+    subnet_count = 1 << (new_prefix - net.prefixlen)
+    if subnet_count > MAX_SPLIT_SUBNETS:
+        raise ValueError(
+            "split would produce %d subnets, which exceeds the limit of %d; "
+            "choose a longer starting prefix, a shorter new prefix, or a "
+            "smaller count" % (subnet_count, MAX_SPLIT_SUBNETS)
         )
 
     return list(net.subnets(new_prefix=new_prefix))
