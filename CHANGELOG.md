@@ -5,7 +5,12 @@ follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.2.0] - unreleased
+
 ### Fixed
+- `split` refuses requests that would produce more than 1,000,000 subnets
+  (for example `10.0.0.0/8 --prefix 32`) with a clear error instead of
+  hanging and exhausting memory.
 - `num_usable` for IPv6 blocks shorter than `/127` no longer counts the
   all-zeros interface identifier, which is reserved as the Subnet-Router
   anycast address (RFC 4291 §2.6.1) and was already excluded from the
@@ -18,8 +23,6 @@ follows [Keep a Changelog](https://keepachangelog.com/).
 - `summarize` with `strict=True` now reports "has host bits set" for an input
   like `10.1.2.3/24` instead of a misleading "does not appear to be an IPv4
   or IPv6 address".
-- `python_requires` raised to `>=3.7`: `contains` uses
-  `ipaddress.IPv4Network.subnet_of`, which does not exist on 3.6.
 
 ### Added
 - `tests/test_reference.py`: differential tests that check every command
@@ -29,11 +32,14 @@ follows [Keep a Changelog](https://keepachangelog.com/).
   and exact).
 
 ### Changed
+- `python_requires` raised to `>=3.11`; Python 3.7-3.10 are end-of-life.
+  Classifiers now list 3.11 through 3.15.
+- CI matrix is Python 3.11 through 3.15, on `actions/checkout@v7` and
+  `actions/setup-python@v7`.
 - Dev dependencies unpinned from `pytest==6.2.4`, which could not collect the
   test suite at all on Python 3.12+ (its assertion rewriter uses the removed
-  `ast.Str`), to `pytest>=7.4,<9`; `flake8` added.
-- CI runs on Python 3.9 through 3.13 instead of 3.9 only, runs the `flake8`
-  configuration the repo already shipped, and uses current action versions.
+  `ast.Str`), to `pytest>=7.4,<10`; `flake8` added.
+- CI runs the `flake8` configuration the repo already shipped.
 
 ## [0.1.0]
 

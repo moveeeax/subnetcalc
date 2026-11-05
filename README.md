@@ -12,7 +12,7 @@ $ . venv/bin/activate
 $ pip install -e .
 ```
 
-Requires Python 3.7+. For development (tests and lint):
+Requires Python 3.11+. For development (tests and lint):
 
 ```console
 $ pip install -e . -r requirements-dev.txt
