@@ -19,7 +19,7 @@ for line in read(os.path.join("subnetcalc", "__init__.py")).splitlines():
 
 setup(
     name="subnetcalc",
-    version=about.get("version", "0.2.0"),
+    version=about.get("version", "0.3.0"),
     description="A small CIDR/subnet toolkit CLI for network admins",
     long_description=read("README.md") if os.path.exists(os.path.join(here, "README.md")) else "",
     long_description_content_type="text/markdown",

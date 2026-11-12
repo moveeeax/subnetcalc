@@ -1,3 +1,3 @@
 """subnetcalc - a small CIDR/subnet toolkit for network admins."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
