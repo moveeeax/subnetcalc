@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. The format loosely
 follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [Unreleased]
+## [0.3.0] - 2026-11-12
 
 ### Added
 - `free` command and `core.free_space` / `core.next_free`: list the
@@ -17,7 +17,7 @@ follows [Keep a Changelog](https://keepachangelog.com/).
   free-space and fragmentation report, and table, JSON, YAML or Terraform
   `locals` output (#3, from the archived `cidr-plan` idea).
 
-## [0.2.0] - unreleased
+## [0.2.0] - 2026-11-05
 
 ### Fixed
 - `split` refuses requests that would produce more than 1,000,000 subnets
