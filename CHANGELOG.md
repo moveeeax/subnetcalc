@@ -5,6 +5,18 @@ follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- `free` command and `core.free_space` / `core.next_free`: list the
+  unallocated blocks of a CIDR after subtracting `--used` / `--used-file`
+  entries, with a total, `--min-prefix` to hide small fragments and
+  `--next /N` for the lowest free block of one size (#8).
+- `plan` command and `core.plan_subnets`: allocate named subnets from a
+  supernet by prefix length or host count, largest first and without
+  overlaps, from a JSON spec or `--subnet` flags. Supports groups, pinned
+  CIDRs, `--used` collision checks, `--previous` for stable allocation, a
+  free-space and fragmentation report, and table, JSON, YAML or Terraform
+  `locals` output (#3, from the archived `cidr-plan` idea).
+
 ## [0.2.0] - unreleased
 
 ### Fixed
